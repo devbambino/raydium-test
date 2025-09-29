@@ -7,18 +7,24 @@ import {
   Router,
   TokenAmount,
   Token,
+  DEVNET_PROGRAM_ID
 } from '@raydium-io/raydium-sdk-v2'
 import { NATIVE_MINT, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { initSdk, txVersion } from '../config'
 import { readCachePoolData, writeCachePoolData } from '../cache/utils'
+import { PublicKey } from '@solana/web3.js'
 
 async function routeSwap() {
+  //Devnet config:
+  //yarn dev src/trade/routeSwap.ts
+  const USDCMintd = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU")
+  
   const raydium = await initSdk()
   await raydium.fetchChainTime()
 
   const inputAmount = '100'
   const SOL = NATIVE_MINT // or WSOLMint
-  const [inputMint, outputMint] = [SOL, USDCMint]
+  const [inputMint, outputMint] = [USDCMintd, SOL]
   const [inputMintStr, outputMintStr] = [inputMint.toBase58(), outputMint.toBase58()]
 
   // strongly recommend cache all pool data, it will reduce lots of data fetching time
@@ -30,12 +36,16 @@ async function routeSwap() {
     writeCachePoolData(poolData)
   }
 
-  console.log('computing swap route..')
+  console.log('computing swap route.. pool:', poolData)
+  let poolInfo = await raydium.cpmm.getRpcPoolInfo("BsMm4RQmH4XbX15RMPwmU9TBdqwRGfwv2jjks2XCDAMo")
+  console.log('computing  RpcPoolInfo poolInfo:', poolInfo)
+
   const routes = raydium.tradeV2.getAllRoute({
     inputMint,
     outputMint,
     ...poolData,
   })
+  console.log('computing routes:', routes)
 
   const {
     routePathDict,
@@ -94,7 +104,7 @@ async function routeSwap() {
   })
 
   console.log('build swap tx..')
-  const { execute } = await raydium.tradeV2.swap({
+  /*const { execute } = await raydium.tradeV2.swap({
     routeProgram: Router,
     txVersion,
     swapInfo: r[0],
@@ -111,7 +121,7 @@ async function routeSwap() {
 
   console.log('execute tx..')
   const { txIds } = await execute({ sequentially: true })
-  console.log('txIds:', txIds)
+  console.log('txIds:', txIds)*/
 }
 /** uncomment code below to execute */
 routeSwap()
