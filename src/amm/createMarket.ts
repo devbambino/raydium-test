@@ -1,26 +1,33 @@
 import { RAYMint, USDCMint, OPEN_BOOK_PROGRAM, DEVNET_PROGRAM_ID, WSOLMint } from '@raydium-io/raydium-sdk-v2'
 import { initSdk, txVersion } from '../config'
+import { PublicKey } from '@solana/web3.js'
 
 export const createMarket = async () => {
+  //Devnet config:
+  //yarn dev src/amm/createMarket.ts
+
   const raydium = await initSdk()
 
   // check mint info here: https://api-v3.raydium.io/mint/list
   // or get mint info by api: await raydium.token.getTokenInfo('mint address')
+  const USDCfrtMint = new PublicKey("DyxZHcYerSkibsfM6ovS1URjW4nXWLUsEiBgzm1cJMKQ")
+  const SPYfrtMint = new PublicKey("Bd7YFkYQ4fn9hx7XK7TGzPcNEcMpmEicRtCo817jxpL2")
+
   const { execute, extInfo, transactions } = await raydium.marketV2.create({
     baseInfo: {
       // create market doesn't support token 2022
-      mint: RAYMint,
+      mint: USDCfrtMint,
       decimals: 6,
     },
     quoteInfo: {
       // create market doesn't support token 2022
-      mint: USDCMint,
-      decimals: 9,
+      mint: SPYfrtMint,
+      decimals: 6,
     },
     lotSize: 1,
     tickSize: 0.01,
-    dexProgramId: OPEN_BOOK_PROGRAM,
-    // dexProgramId: DEVNET_PROGRAM_ID.OPEN_BOOK_PROGRAM, // devnet
+    //dexProgramId: OPEN_BOOK_PROGRAM,
+     dexProgramId: DEVNET_PROGRAM_ID.OPENBOOK_MARKET, // devnet
 
     // requestQueueSpace: 5120 + 12, // optional
     // eventQueueSpace: 262144 + 12, // optional
@@ -58,4 +65,4 @@ export const createMarket = async () => {
 }
 
 /** uncomment code below to execute */
-// createMarket()
+createMarket()

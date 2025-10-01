@@ -11,12 +11,19 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import BN from 'bn.js'
 
 export const createAmmPool = async () => {
+  //Devnet config:
+  //yarn dev src/amm/createAmmPool.ts
+
   const raydium = await initSdk()
-  const marketId = new PublicKey(`<you market id here>`)
+  const marketId = new PublicKey('marketId')
 
   // if you are confirmed your market info, don't have to get market info from rpc below
   const marketBufferInfo = await raydium.connection.getAccountInfo(new PublicKey(marketId))
   const { baseMint, quoteMint } = MARKET_STATE_LAYOUT_V3.decode(marketBufferInfo!.data)
+  /*const USDCfrtMint = new PublicKey("DyxZHcYerSkibsfM6ovS1URjW4nXWLUsEiBgzm1cJMKQ")
+  const SPYfrtMint = new PublicKey("Bd7YFkYQ4fn9hx7XK7TGzPcNEcMpmEicRtCo817jxpL2")
+  const baseMint = USDCfrtMint
+  const quoteMint = SPYfrtMint*/
 
   // check mint info here: https://api-v3.raydium.io/mint/list
   // or get mint info by api: await raydium.token.getTokenInfo('mint address')
@@ -24,8 +31,8 @@ export const createAmmPool = async () => {
   // amm pool doesn't support token 2022
   const baseMintInfo = await raydium.token.getTokenInfo(baseMint)
   const quoteMintInfo = await raydium.token.getTokenInfo(quoteMint)
-  const baseAmount = new BN(1000)
-  const quoteAmount = new BN(1000)
+  const baseAmount = new BN(100 * 10 ** 6)
+  const quoteAmount = new BN(100 * 10 ** 6)
 
   if (
     baseMintInfo.programId !== TOKEN_PROGRAM_ID.toBase58() ||
@@ -36,17 +43,17 @@ export const createAmmPool = async () => {
     )
   }
 
-  if (baseAmount.mul(quoteAmount).lte(new BN(1).mul(new BN(10 ** baseMintInfo.decimals)).pow(new BN(2)))) {
+  /*if (baseAmount.mul(quoteAmount).lte(new BN(1).mul(new BN(10 ** baseMintInfo.decimals)).pow(new BN(2)))) {
     throw new Error('initial liquidity too low, try adding more baseAmount/quoteAmount')
-  }
+  }*/
 
   const { execute, extInfo } = await raydium.liquidity.createPoolV4({
-    programId: AMM_V4,
-    // programId: DEVNET_PROGRAM_ID.AMM_V4, // devnet
+    //programId: AMM_V4,
+     programId: DEVNET_PROGRAM_ID.AmmV4, // devnet
     marketInfo: {
       marketId,
-      programId: OPEN_BOOK_PROGRAM,
-      // programId: DEVNET_PROGRAM_ID.OPEN_BOOK_PROGRAM, // devnet
+      //programId: OPEN_BOOK_PROGRAM,
+      programId: DEVNET_PROGRAM_ID.OPENBOOK_MARKET, // devnet
     },
     baseMintInfo: {
       mint: baseMint,
@@ -56,8 +63,8 @@ export const createAmmPool = async () => {
       mint: quoteMint,
       decimals: quoteMintInfo.decimals, // if you know mint decimals here, can pass number directly
     },
-    baseAmount: new BN(1000),
-    quoteAmount: new BN(1000),
+    baseAmount: baseAmount,
+    quoteAmount: quoteAmount,
 
     // sol devnet faucet: https://faucet.solana.com/
     // baseAmount: new BN(4 * 10 ** 9), // if devnet pool with sol/wsol, better use amount >= 4*10**9
@@ -69,8 +76,8 @@ export const createAmmPool = async () => {
     },
     associatedOnly: false,
     txVersion,
-    feeDestinationId: FEE_DESTINATION_ID,
-    // feeDestinationId: DEVNET_PROGRAM_ID.FEE_DESTINATION_ID, // devnet
+    //feeDestinationId: FEE_DESTINATION_ID,
+    feeDestinationId: DEVNET_PROGRAM_ID.FEE_DESTINATION_ID, // devnet
     // optional: set up priority fee here
     // computeBudgetConfig: {
     //   units: 600000,
@@ -79,7 +86,7 @@ export const createAmmPool = async () => {
   })
 
   // don't want to wait confirm, set sendAndConfirm to false or don't pass any params to execute
-  const { txId } = await execute({ sendAndConfirm: true })
+  const { txId } = await execute()
   console.log(
     'amm pool created! txId: ',
     txId,
@@ -96,4 +103,4 @@ export const createAmmPool = async () => {
 }
 
 /** uncomment code below to execute */
-// createAmmPool()
+createAmmPool()

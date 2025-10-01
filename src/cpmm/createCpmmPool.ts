@@ -26,14 +26,14 @@ export const createPool = async () => {
     } 
    */
 
-  const feeConfigs = await raydium.api.getCpmmConfigs()
+  //const feeConfigs = await raydium.api.getCpmmConfigs()
 
-  if (raydium.cluster === 'devnet') {
+  /*if (raydium.cluster === 'devnet') {
     feeConfigs.forEach((config) => {
       // config.id = getCpmmPdaAmmConfigId(DEVNET_PROGRAM_ID.CREATE_CPMM_POOL_PROGRAM, config.index).publicKey.toBase58()
       config.id = getCpmmPdaAmmConfigId(DEVNET_PROGRAM_ID.CREATE_CPMM_POOL_PROGRAM, config.index).publicKey.toBase58()
     })
-  }
+  }*/
 
   const { execute, extInfo, transaction } = await raydium.cpmm.createPool({
     // poolId: // your custom publicKey, default sdk will automatically calculate pda pool id
@@ -46,7 +46,7 @@ export const createPool = async () => {
     mintAAmount: new BN(100),
     mintBAmount: new BN(100),
     startTime: new BN(0),
-    feeConfig: feeConfigs[0],
+    //feeConfig: feeConfigs[0],
     associatedOnly: false,
     ownerInfo: {
       useSOLBalance: true,

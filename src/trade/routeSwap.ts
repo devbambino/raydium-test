@@ -26,30 +26,36 @@ const poolType: Record<number, string> = {
 setLoggerLevel('Raydium_tradeV2', LogLevel.Debug)
 
 async function routeSwap() {
+  //Devnet config:
+  //yarn dev src/trade/routeSwap.ts
   const raydium = await initSdk()
   await raydium.fetchChainTime()
 
-  const inputAmount = '8000000'
-  const SOL = NATIVE_MINT // or WSOLMint
-  const [inputMint, outputMint] = [SOL, new PublicKey('7i5XE77hnx1a6hjWgSuYwmqdmLoDJNTU1rYA6Gqx7QiE')]
+  const inputAmount = '5'
+  //const SOL = NATIVE_MINT // or WSOLMint
+  const USDCfrtMint = new PublicKey("DyxZHcYerSkibsfM6ovS1URjW4nXWLUsEiBgzm1cJMKQ")
+  const SPYfrtMint = new PublicKey("Bd7YFkYQ4fn9hx7XK7TGzPcNEcMpmEicRtCo817jxpL2")
+  const [inputMint, outputMint] = [USDCfrtMint, SPYfrtMint]
   const [inputMintStr, outputMintStr] = [inputMint.toBase58(), outputMint.toBase58()]
 
   // strongly recommend cache all pool data, it will reduce lots of data fetching time
   // code below is a simple way to cache it, you can implement it with any other ways
   // let poolData = readCachePoolData() // initial cache time is 10 mins(1000 * 60 * 10), if wants to cache longer, set bigger number in milliseconds
-  let poolData = readCachePoolData(1000 * 60 * 60 * 24 * 10) // example for cache 1 day
+  /*let poolData = readCachePoolData(1000 * 60 * 60 * 24 * 10) // example for cache 1 day
   if (poolData.ammPools.length === 0) {
     console.log(
       '**Please ensure you are using "paid" rpc node or you might encounter fetch data error due to pretty large pool data**'
     )
     console.log('fetching all pool basic info, this might take a while (more than 1 minutes)..')
-    poolData = await raydium.tradeV2.fetchRoutePoolBasicInfo({
-    //   amm: DEVNET_PROGRAM_ID.AMM_V4,
+    poolData = await raydium.tradeV2.fetchRoutePoolBasicInfo()  
+    // {  amm: DEVNET_PROGRAM_ID.AMM_V4,
     //   clmm: DEVNET_PROGRAM_ID.CLMM_PROGRAM_ID,
     //   cpmm: DEVNET_PROGRAM_ID.CREATE_CPMM_POOL_PROGRAM,
     // })
     writeCachePoolData(poolData)
-  }
+  }*/
+
+  let poolData = await raydium.tradeV2.fetchRoutePoolBasicInfo()  
 
   console.log('computing swap route..')
   // route here also can cache for a time period by pair to reduce time
@@ -72,14 +78,14 @@ async function routeSwap() {
     computeClmmPoolInfo,
     computePoolTickData,
 
-    computeCpmmData,
+    //computeCpmmData,
   } = await raydium.tradeV2.fetchSwapRoutesData({
     routes,
     inputMint,
     outputMint,
   })
 
-  console.log('calculating available swap routes...')
+  console.log('calculating available swap routes routes:',routes)
   const swapRoutes = raydium.tradeV2.getAllRouteComputeAmountOut({
     inputTokenAmount: new TokenAmount(
       new Token({
@@ -91,7 +97,7 @@ async function routeSwap() {
     ),
     directPath: routes.directPath.map(
       (p) =>
-        ammSimulateCache[p.id.toBase58()] || computeClmmPoolInfo[p.id.toBase58()] || computeCpmmData[p.id.toBase58()]
+        ammSimulateCache[p.id.toBase58()] || computeClmmPoolInfo[p.id.toBase58()]
     ),
     routePathDict,
     simulateCache: ammSimulateCache,
@@ -101,8 +107,8 @@ async function routeSwap() {
       ...mintInfos[outputMintStr],
       programId: mintInfos[outputMintStr].programId.toBase58(),
       address: outputMintStr,
-      freezeAuthority: undefined,
-      mintAuthority: undefined,
+      //freezeAuthority: undefined,
+      //mintAuthority: undefined,
       extensions: {
         feeConfig: toFeeConfig(mintInfos[outputMintStr].feeConfig),
       },
@@ -159,4 +165,4 @@ async function routeSwap() {
   process.exit() // if you don't want to end up node execution, comment this line
 }
 /** uncomment code below to execute */
-// routeSwap()
+routeSwap()
