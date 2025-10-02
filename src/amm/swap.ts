@@ -1,4 +1,5 @@
 import { ApiV3PoolInfoStandardItem, AmmV4Keys, AmmRpcData } from '@raydium-io/raydium-sdk-v2'
+//import { Liquidity, LiquidityPoolKeysV4, LiquidityStateV4, Percent, Token, TokenAmount } from '@raydium-io/raydium-sdk';
 import { initSdk, txVersion } from '../config'
 import BN from 'bn.js'
 import { isValidAmm } from './utils'
@@ -12,32 +13,40 @@ export const swap = async () => {
   //yarn dev src/amm/swap.ts
 
   const raydium = await initSdk()
-  const amountIn = 5
+  const amountIn = 2
   //const inputMint = NATIVE_MINT.toBase58()
-  const poolId = 'poolId' // SOL-USDC pool
+  const poolId = 'poolId' 
 
   let poolInfo: ApiV3PoolInfoStandardItem | undefined
   let poolKeys: AmmV4Keys | undefined
   let rpcData: AmmRpcData
+  
+  //const data2 = await raydium.cpmm.getPoolInfoFromRPC(poolId)
+
+  /*
 
   const data = await raydium.api.fetchPoolById({ ids: poolId })
   poolInfo = data[0] as ApiV3PoolInfoStandardItem
   //if (!isValidAmm(poolInfo.programId)) throw new Error('target pool is not AMM pool')
   poolKeys = await raydium.liquidity.getAmmPoolKeys(poolId)
   rpcData = await raydium.liquidity.getRpcPoolInfo(poolId)
-
-  /*const data = await raydium.liquidity.getRpcPoolInfo(poolId)
+  
+  const data = await raydium.liquidity.getRpcPoolInfo(poolId)
   let poolInfo: ApiV3PoolInfoStandardItem
   let poolKeys: AmmV4Keys = await raydium.liquidity.getAmmPoolKeys(poolId)
-  let rpcData: AmmRpcData = data */
+  let rpcData: AmmRpcData = data 
+  
   console.log('pool info:', poolInfo)
   console.log('pool poolKeys:', poolKeys)
   console.log('pool rpcData:', rpcData)
 
-  /*
   let poolInfo: ApiV3PoolInfoStandardItem | undefined
   let poolKeys: AmmV4Keys | undefined
   let rpcData: AmmRpcData
+
+  */
+  
+  
 
   if (raydium.cluster === 'mainnet') {
     // if you wish to get pool info from rpc, also can modify logic to go rpc method directly
@@ -48,14 +57,17 @@ export const swap = async () => {
     rpcData = await raydium.liquidity.getRpcPoolInfo(poolId)
   } else {
     // note: getPoolInfoFromRpc method only return required pool data for computing not all detail pool info
-    //const data = await raydium.liquidity.getPoolInfoFromRpc({ poolId })
-    const data = await raydium.liquidity.getRpcPoolInfo(poolId)
-    poolKeys = await raydium.liquidity.getAmmPoolKeys(poolId)
-    rpcData = data
+    const data = await raydium.liquidity.getPoolInfoFromRpc({ poolId })
+    //const data = await raydium.liquidity.getRpcPoolInfo(poolId)
+    //poolKeys = await raydium.liquidity.getAmmPoolKeys(poolId)
+    //rpcData = data
+    poolInfo = data.poolInfo
+    poolKeys = data.poolKeys
+    rpcData = data.poolRpcData
   }
 
-  if (poolInfo!.mintA.address !== inputMint && poolInfo!.mintB.address !== inputMint)
-    throw new Error('input mint does not match pool')
+  //if (poolInfo!.mintA.address !== inputMint && poolInfo!.mintB.address !== inputMint)
+    //throw new Error('input mint does not match pool')
 
  
   const [baseReserve, quoteReserve, status] = [rpcData.baseReserve, rpcData.quoteReserve, rpcData.status.toNumber()]
@@ -67,7 +79,7 @@ export const swap = async () => {
 
   const [mintIn, mintOut] = [baseMintInfo, quoteMintInfo]//baseIn ? [poolInfo!.mintA, poolInfo!.mintB] : [poolInfo!.mintB, poolInfo!.mintA]
 
-  const out = raydium.liquidity.computeAmountOut({
+  /*const out = raydium.liquidity.computeAmountOut({
     poolInfo: {
       baseReserve,
       quoteReserve,
@@ -104,6 +116,20 @@ export const swap = async () => {
     mintIn: baseIn,
     mintOut: mintOut.address,
     slippage: 0.01, // range: 1 ~ 0.0001, means 100% ~ 0.01%
+  })*/
+
+  const out = raydium.liquidity.computeAmountOut({
+    poolInfo: {
+      ...poolInfo,
+      baseReserve,
+      quoteReserve,
+      status,
+      version: 4,
+    },
+    amountIn: new BN(amountIn * 10 ** 6),
+    mintIn: mintIn.address,
+    mintOut: mintOut.address,
+    slippage: 0.01, // range: 1 ~ 0.0001, means 100% ~ 0.01%
   })
 
   console.log(
@@ -120,7 +146,8 @@ export const swap = async () => {
 
   const { execute } = await raydium.liquidity.swap({
     poolInfo,
-    amountIn: new BN(amountIn),
+    poolKeys,
+    amountIn: new BN(amountIn * 10 ** 6),
     amountOut: out.minAmountOut, // out.amountOut means amount 'without' slippage
     fixedSide: 'in',
     inputMint: mintIn.address,
@@ -134,10 +161,10 @@ export const swap = async () => {
     // },
 
     // optional: set up priority fee here
-    computeBudgetConfig: {
+    /*computeBudgetConfig: {
       units: 600000,
       microLamports: 46591500,
-    },
+    },*/
 
     // optional: add transfer sol to tip account instruction. e.g sent tip to jito
     // txTipConfig: {
@@ -152,7 +179,7 @@ export const swap = async () => {
   console.log(`swap successfully in amm pool:`, { txId: `https://explorer.solana.com/tx/${txId}` })
 
   process.exit() // if you don't want to end up node execution, comment this line
-    */
+    
 }
 
 /** uncomment code below to execute */

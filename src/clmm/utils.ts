@@ -1,10 +1,21 @@
 import { CLMM_PROGRAM_ID, DEVNET_PROGRAM_ID } from '@raydium-io/raydium-sdk-v2'
 
-const VALID_PROGRAM_ID = new Set([CLMM_PROGRAM_ID.toBase58(), DEVNET_PROGRAM_ID.CLMM_PROGRAM_ID.toBase58()])
+const VALID_PROGRAM_ID = new Set([CLMM_PROGRAM_ID.toBase58(), DEVNET_PROGRAM_ID.CLMM.toBase58()])
 
 export const isValidClmm = (id: string) => VALID_PROGRAM_ID.has(id)
 
 export const devConfigs = [
+  {
+    id: 'DRayAUgENGQBKVaX8owNhgzkEDyoHTGVEGHVJT1E9pfH',
+    index: 0,
+    protocolFeeRate: 120000,
+    tradeFeeRate: 100,
+    tickSpacing: 10,
+    fundFeeRate: 40000,
+    description: 'Best for very stable pairs',
+    defaultRange: 0.005,
+    defaultRangePoint: [0.001, 0.003, 0.005, 0.008, 0.01],
+  },
   {
     id: 'CQYbhr6amxUER4p5SC44C63R4qw4NFc9Z4Db9vF4tZwG',
     index: 0,

@@ -15,10 +15,12 @@ import { printSimulateInfo } from '../util'
 import { PublicKey } from '@solana/web3.js'
 
 export const swap = async () => {
+  //Devnet config:
+  //yarn dev src/cpmm/swap.ts
   const raydium = await initSdk()
 
   // SOL - USDC pool
-  const poolId = '7JuwJuNU88gurFnyWeiyGKbFmExMWcmRZntn9imEzdny'
+  const poolId = 'poolId'
   const inputAmount = new BN(100)
   const inputMint = NATIVE_MINT.toBase58()
 

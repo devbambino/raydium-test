@@ -18,7 +18,7 @@ export const createAmmPool = async () => {
   const marketId = new PublicKey('marketId')
 
   // if you are confirmed your market info, don't have to get market info from rpc below
-  const marketBufferInfo = await raydium.connection.getAccountInfo(new PublicKey(marketId))
+  const marketBufferInfo = await raydium.connection.getAccountInfo(marketId)
   const { baseMint, quoteMint } = MARKET_STATE_LAYOUT_V3.decode(marketBufferInfo!.data)
   /*const USDCfrtMint = new PublicKey("DyxZHcYerSkibsfM6ovS1URjW4nXWLUsEiBgzm1cJMKQ")
   const SPYfrtMint = new PublicKey("Bd7YFkYQ4fn9hx7XK7TGzPcNEcMpmEicRtCo817jxpL2")
@@ -33,6 +33,10 @@ export const createAmmPool = async () => {
   const quoteMintInfo = await raydium.token.getTokenInfo(quoteMint)
   const baseAmount = new BN(100 * 10 ** 6)
   const quoteAmount = new BN(100 * 10 ** 6)
+
+  console.log('baseMintInfo:',baseMintInfo)
+  console.log('quoteMintInfo:',quoteMintInfo)
+
 
   if (
     baseMintInfo.programId !== TOKEN_PROGRAM_ID.toBase58() ||
@@ -86,7 +90,7 @@ export const createAmmPool = async () => {
   })
 
   // don't want to wait confirm, set sendAndConfirm to false or don't pass any params to execute
-  const { txId } = await execute()
+  /*const { txId } = await execute()
   console.log(
     'amm pool created! txId: ',
     txId,
@@ -98,7 +102,7 @@ export const createAmmPool = async () => {
       }),
       {}
     )
-  )
+  )*/
   process.exit() // if you don't want to end up node execution, comment this line
 }
 
